@@ -320,7 +320,6 @@ body::before {
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   width: 100%;
   -webkit-appearance: none;
-  appearance: none;
 }
 .field input::placeholder,
 .field textarea::placeholder { color: var(--text3); }
@@ -410,6 +409,7 @@ body::before {
   padding: 14px 16px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--bg2);
 }
+.toggle-info {}
 .toggle-label { font-size: 13.5px; font-weight: 500; color: var(--text); }
 .toggle-sub { font-size: 11.5px; color: var(--text2); margin-top: 3px; }
 .toggle-switch {
@@ -1114,11 +1114,7 @@ function collectData(step) {
 }
 
 // ── SUBMIT ──
-// ── REPLACE THIS WITH YOUR DEPLOYED WEB APP URL ──────────────────────────
-// After deploying your Google Apps Script, paste the URL here:
-// Example: https://script.google.com/macros/s/AKfycbxXXXXXXXXXXX/exec
 var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxEdMD_YhZaOYyk8ITANmtRUlrTWmmoeo8ynhF8NmFE6NZ53-1MEoRWI3LLqQwwK68/exec";
-// ─────────────────────────────────────────────────────────────────────────
 
 async function handleSubmit() {
   if (!validateStep(4)) return;
@@ -1138,20 +1134,41 @@ async function handleSubmit() {
   arrow.style.display = 'none';
   btn.disabled = true;
 
+  // ── IFRAME FORM POST — bypasses CORS completely ──
+  // Creates a hidden form that POSTs directly to Apps Script.
+  // A hidden iframe catches the redirect so the user stays on the page.
   try {
-    // Google Apps Script requires mode:'no-cors' from external origins.
-    // The response will be opaque (we can't read it), but the data
-    // is received and written to Sheets successfully.
-    await fetch(SCRIPT_URL, {
-      method:  'POST',
-      mode:    'no-cors',          // Required for cross-origin Apps Script calls
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(formData),
-    });
+    const iframeName = 'gs-target-' + Date.now();
+
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.cssText = 'display:none;width:0;height:0;border:0;position:absolute;';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method  = 'POST';
+    form.action  = 'https://script.google.com/macros/s/AKfycbxS1raP-TqBNXrftEv8dUoKQb2r1rk2d_noFWS1EXsRhrl1TazhAmnwspP59334jAP2/exec';
+    form.target  = iframeName;
+    form.style.display = 'none';
+
+    // Send all data as a single JSON string in a field called "data"
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = 'data';
+    input.value = JSON.stringify(formData);
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+
+    // Cleanup after Apps Script has time to process
+    setTimeout(() => {
+      try { document.body.removeChild(form); } catch(_) {}
+      try { document.body.removeChild(iframe); } catch(_) {}
+    }, 4000);
+
   } catch (err) {
-    // Network error — still show success since no-cors fetch often throws
-    // even on a successful write. The data reaches Sheets regardless.
-    console.warn('Fetch note:', err.message);
+    console.warn('Submission error:', err.message);
   }
 
   // Show success screen
@@ -1160,7 +1177,7 @@ async function handleSubmit() {
     const ss = document.getElementById('success-screen');
     ss.classList.add('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, 700);
+  }, 800);
 }
 
 // ── INIT ──
