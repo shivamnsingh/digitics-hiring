@@ -592,7 +592,7 @@ async function handleSubmit(){
   btn.disabled=true;
 
   // Fallback: if URL not set, still show success (for testing layout)
-  if(!SCRIPT_URL || SCRIPT_URL==='YOUR_GOOGLE_SCRIPT_URL'){
+  if(!SCRIPT_URL || SCRIPT_URL==='https://script.google.com/macros/s/AKfycbyDYcwakwaFz1xTLSVSZE9Hzvxov-Z7HdzIcu7mIOQJGmDO3mLBF6qjLI7pKmIOK7RE/exec'){
     console.warn('⚠️ No script URL set. Showing success screen without sending data.');
     showSuccess();
     return;
