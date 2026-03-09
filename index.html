@@ -369,7 +369,7 @@ function nextStep(from){if(!validate(from))return;collect(from);const next=from+
 function prevStep(from){const prev=from-1;document.getElementById('step-'+from).classList.remove('active');document.getElementById('step-'+prev).classList.add('active');step=prev;updateProgress(prev);scrollTop();}
 
 /* ── BACKEND: paste your Apps Script /exec URL here ── */
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypQsuLKE4MGKsu7Ys2W_-_Qjj_iLt7pZkmPfOVjBc45hGZl_TCmOTXiKFydqz2g_ki7g/exec';
+const SCRIPT_URL = 'https://api.sheetmonkey.io/form/q5FaBfFi9e3Y2dn6JLQReg';
 
 async function handleSubmit(){
   if(!validate(4))return;
@@ -379,7 +379,7 @@ async function handleSubmit(){
   if(arr)arr.style.display='none';
   btn.disabled=true;
   try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(fd)});
+    await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fd)});
     showSuccess();
   }catch(err){
     console.error('Submission error:',err);
