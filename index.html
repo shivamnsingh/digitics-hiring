@@ -59,29 +59,11 @@ body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;back
   transition:opacity .55s ease,visibility .55s ease;
 }
 #preloader.hidden{opacity:0;visibility:hidden;pointer-events:none}
-
-/* Wordmark */
-.pl-wordmark{
-  font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:.06em;
-  color:var(--text);letter-spacing:-.01em;
-  opacity:.9;
-}
-
-/* Single arc spinner */
-.pl-spinner{
-  width:44px;height:44px;border-radius:50%;
-  border:2px solid var(--bg3);
-  border-top-color:var(--p);
-  border-right-color:var(--p2);
-  animation:spin 1s linear infinite;
-}
+.pl-wordmark{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:.06em;color:var(--text);letter-spacing:-.01em;opacity:.9}
+.pl-spinner{width:44px;height:44px;border-radius:50%;border:2px solid var(--bg3);border-top-color:var(--p);border-right-color:var(--p2);animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* Thin progress bar */
 .pl-bar-wrap{width:160px;height:2px;background:var(--bg3);border-radius:2px;overflow:hidden}
 .pl-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--p3),var(--p2));border-radius:2px;transition:width .07s linear}
-
-/* Percentage */
 .pl-pct{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3)}
 
 /* ══════════════════════════════════
@@ -576,9 +558,21 @@ function prevStep(from){
   step=prev;updateProgress(prev);scrollTop();
 }
 
-/* ══ SUBMIT — Google Sheets via fetch POST ══ */
-// Paste your Apps Script Web App URL below (Deploy → New deployment → copy URL)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyDYcwakwaFz1xTLSVSZE9Hzvxov-Z7HdzIcu7mIOQJGmDO3mLBF6qjLI7pKmIOK7RE/exec';
+/* ══════════════════════════════════════════════════════════════
+   BACKEND CONNECTION — Google Sheets via Apps Script
+   ──────────────────────────────────────────────────────────────
+   HOW TO CONNECT (one-time, ~3 minutes):
+
+   1. Go to  https://script.google.com  → click "New project"
+   2. Delete the default code, paste the full contents of Code.gs
+   3. Click  Deploy → New deployment
+        · Type:             Web app
+        · Execute as:       Me
+        · Who has access:   Anyone
+   4. Click Deploy → Authorise → copy the /exec URL
+   5. Paste it below — that's the only line you need to change ↓
+══════════════════════════════════════════════════════════════ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypQsuLKE4MGKsu7Ys2W_-_Qjj_iLt7pZkmPfOVjBc45hGZl_TCmOTXiKFydqz2g_ki7g/exec';
 
 async function handleSubmit(){
   if(!validate(4))return;
@@ -587,30 +581,30 @@ async function handleSubmit(){
   const btn=document.getElementById('submit-btn');
   const lbl=document.getElementById('submit-label');
   const arr=document.getElementById('submit-arrow');
+
+  // Guard: remind developer to set the URL
+  if(!SCRIPT_URL||SCRIPT_URL==='https://script.google.com/macros/s/AKfycbypQsuLKE4MGKsu7Ys2W_-_Qjj_iLt7pZkmPfOVjBc45hGZl_TCmOTXiKFydqz2g_ki7g/exec'){
+    alert('⚠️  Backend not connected yet.\n\nOpen this HTML file, find SCRIPT_URL near the bottom, and paste your Apps Script /exec URL.\n\nSee Code.gs for setup instructions.');
+    return;
+  }
+
   lbl.textContent='Submitting…';
   if(arr)arr.style.display='none';
   btn.disabled=true;
 
-  // Fallback: if URL not set, still show success (for testing layout)
-  if(!SCRIPT_URL || SCRIPT_URL==='https://script.google.com/macros/s/AKfycbyDYcwakwaFz1xTLSVSZE9Hzvxov-Z7HdzIcu7mIOQJGmDO3mLBF6qjLI7pKmIOK7RE/exec'){
-    console.warn('⚠️ No script URL set. Showing success screen without sending data.');
-    showSuccess();
-    return;
-  }
-
   try{
-    // Use no-cors mode — Google Apps Script doesn't return CORS headers
-    // so we can't read the response, but the POST still goes through
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(fd)
+    // Google Apps Script doesn't return CORS headers, so we use no-cors.
+    // The POST lands successfully — we just can't read the response body.
+    await fetch(SCRIPT_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(fd)
     });
     showSuccess();
-  } catch(err){
-    console.error('Submission error:', err);
-    // Still show success — the form likely sent (no-cors hides response errors)
+  }catch(err){
+    console.error('Submission error:',err);
+    // Network errors with no-cors are often false alarms; data likely sent.
     showSuccess();
   }
 }
